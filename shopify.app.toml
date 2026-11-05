@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 name = "AI Editor"
 client_id = "3ec4b652dcf48431e7449c0c437628c7"
-application_url = "https://ai-editor-syedjunaid92s-projects.vercel.app"
+application_url = "https://ai-editor-ivory.vercel.app"
 embedded = true
 handle = "appify-ai-editor"
 
@@ -15,9 +15,9 @@ scopes = "read_themes,write_themes"
 
 [auth]
 redirect_urls = [
-  "https://ai-editor-syedjunaid92s-projects.vercel.app/auth/callback",
-  "https://ai-editor-syedjunaid92s-projects.vercel.app/auth/shopify/callback",
-  "https://ai-editor-syedjunaid92s-projects.vercel.app/api/auth",
+  "https://ai-editor-ivory.vercel.app/auth/callback",
+  "https://ai-editor-ivory.vercel.app/auth/shopify/callback",
+  "https://ai-editor-ivory.vercel.app/api/auth",
 ]
 
 [webhooks]

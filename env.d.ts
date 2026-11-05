@@ -15,5 +15,8 @@ declare namespace NodeJS {
     VERCEL_PROJECT_PRODUCTION_URL?: string;
     REDIS_URL?: string;
     UPSTASH_REDIS_URL?: string;
+    SHOPIFY_PARTNER_ORG_ID?: string;
+    SHOPIFY_PARTNER_API_ACCESS_TOKEN?: string;
+    SHOPIFY_APP_GID?: string;
   }
 }

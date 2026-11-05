@@ -148,26 +148,48 @@ export function BillingView({
               Cancelling credits the unused days in this period and locks the
               editor until you subscribe again.
             </s-banner>
-            <Form
-              method="post"
-              action="/app/billing"
-              onSubmit={(event) => {
-                const confirmed = window.confirm(
-                  "Cancel this plan? Shopify credits the unused days in this period, and the editor locks until you subscribe again.",
-                );
-                if (!confirmed) event.preventDefault();
-              }}
+            <s-button
+              type="button"
+              tone="critical"
+              commandFor="cancel-plan-modal"
+              command="--show"
+              disabled={busy || !billingState.subscriptionId}
             >
+              Cancel plan
+            </s-button>
+            <Form method="post" action="/app/billing" id="cancel-plan-form">
               <input type="hidden" name="intent" value="cancel-plan" />
+            </Form>
+            <s-modal id="cancel-plan-modal" heading="Cancel plan" size="small-100">
+              <s-paragraph>
+                Shopify credits the unused days in this period, and the editor
+                locks until you subscribe again.
+              </s-paragraph>
               <s-button
-                type="submit"
+                slot="primary-action"
+                variant="primary"
                 tone="critical"
+                type="button"
+                disabled={busy}
                 {...(cancelling ? { loading: true } : {})}
-                disabled={busy || !billingState.subscriptionId}
+                onClick={() => {
+                  const form = document.getElementById("cancel-plan-form");
+                  if (form instanceof HTMLFormElement) form.requestSubmit();
+                }}
               >
                 Cancel plan
               </s-button>
-            </Form>
+              <s-button
+                slot="secondary-actions"
+                variant="secondary"
+                type="button"
+                commandFor="cancel-plan-modal"
+                command="--hide"
+                disabled={cancelling}
+              >
+                Keep plan
+              </s-button>
+            </s-modal>
           </>
         ) : (
           <s-banner heading="Choose a plan to open the editor" tone="info">

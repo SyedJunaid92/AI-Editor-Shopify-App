@@ -1,0 +1,63 @@
+{%- liquid
+  assign block_key = block.settings.block_key | strip | downcase
+  assign entry = nil
+  if block_key != blank
+    assign entry = app.metafields.ai_editor_blocks[block_key].value
+  endif
+-%}
+
+<div
+  class="ai-editor-block{% if entry %} {{ entry.scope | escape }}{% endif %}"
+  style="padding-top: {{ block.settings.padding_top }}px; padding-bottom: {{ block.settings.padding_bottom }}px;"
+  {{ block.shopify_attributes }}
+>
+  {%- if entry and entry.html != blank -%}
+    {%- if entry.css != blank -%}
+      <style>{{ entry.css }}</style>
+    {%- endif -%}
+    {{ entry.html }}
+  {%- elsif request.design_mode -%}
+    <div style="padding: 24px; border: 1px dashed #b5b5b5; border-radius: 8px; text-align: center; font-family: inherit; color: #616161;">
+      {%- if block_key == blank -%}
+        Enter a Block ID from the AI Editor app (AI blocks page) in this block's settings.
+      {%- else -%}
+        No saved AI block has the ID “{{ block_key | escape }}”. Check the ID in the AI Editor app.
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "AI Editor block",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "block_key",
+      "label": "Block ID",
+      "info": "Create a block in AI Editor → AI blocks, then paste its Block ID here."
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Top padding",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    }
+  ]
+}
+{% endschema %}

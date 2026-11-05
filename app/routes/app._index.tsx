@@ -35,6 +35,7 @@ import {
   ensurePreviewTheme,
   listThemeFiles,
   listThemes,
+  loadThemeContext,
   loadThemeFile,
   upsertThemeFile,
 } from "../lib/theme.server";
@@ -83,6 +84,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const files = theme
     ? await listThemeFiles(admin, theme.id).catch(() => [])
     : [];
+  const requestedFile = new URL(request.url).searchParams.get("file") ?? "";
 
   return {
     view: "editor" as const,
@@ -93,6 +95,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     keyStatus,
     themes,
     files,
+    requestedFile: files.some((file) => file.filename === requestedFile) ? requestedFile : "",
     filesThemeId: theme?.id ?? "",
     models: AI_MODELS,
     fileTypes: FILE_TYPES,
@@ -124,6 +127,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return { ok: false, intent, error: "error" in resolved ? resolved.error : "Missing API key." };
     }
 
+    const themeId = String(form.get("themeId") || "");
+    const themeContext = themeId
+      ? await loadThemeContext(admin, themeId).catch(() => null)
+      : null;
+
     try {
       const code = await generateShopifyCode({
         apiKey: resolved.apiKey,
@@ -132,6 +140,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         currentCode,
         fileType,
         filename,
+        themeContext,
       });
       return { ok: true, intent, code, message: "Code generated." };
     } catch (error) {
@@ -282,7 +291,7 @@ function EditorScreen({
   const filesFetcher = useFetcher<ActionData>();
   const previewFetcher = useFetcher<ActionData>();
   const shopify = useAppBridge();
-  const initialFilename = defaultThemeFilename(data.files);
+  const initialFilename = data.requestedFile || defaultThemeFilename(data.files);
   const [prompt, setPrompt] = useState("");
   const [code, setCode] = useState("");
   const [savedCode, setSavedCode] = useState("");

@@ -28,6 +28,7 @@ export default function App() {
     >
       <s-app-nav>
         <s-link href="/app">Editor</s-link>
+        <s-link href="/app/blocks">AI blocks</s-link>
         <s-link href="/app/billing">Billing</s-link>
         <s-link href="/app/settings">API keys</s-link>
       </s-app-nav>

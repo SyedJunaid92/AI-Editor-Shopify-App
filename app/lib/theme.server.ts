@@ -255,6 +255,119 @@ export async function loadThemeFile(
   return (file.body?.content as string | undefined) ?? "";
 }
 
+export type ThemeContext = {
+  name: string;
+  role: string;
+  themeName: string;
+  themeVersion: string;
+  themeAuthor: string;
+  colorSchemes: string[];
+  hasColorSchemeGroup: boolean;
+  globalSettings: { id: string; type: string }[];
+  sections: string[];
+  blocks: string[];
+  snippets: string[];
+};
+
+const CONTEXT_SETTING_TYPES = new Set([
+  "color",
+  "color_background",
+  "color_scheme",
+  "color_scheme_group",
+  "font_picker",
+  "range",
+]);
+const MAX_CONTEXT_SETTINGS = 60;
+const MAX_CONTEXT_FILES = 80;
+
+function parseThemeJson(content: string | undefined) {
+  if (!content) return null;
+  try {
+    return JSON.parse(content.replace(/^\s*\/\*[\s\S]*?\*\/\s*/, ""));
+  } catch {
+    return null;
+  }
+}
+
+function baseNames(files: ThemeFileNode[], folder: string) {
+  return files
+    .filter((file) => file.filename.startsWith(`${folder}/`) && file.filename.endsWith(".liquid"))
+    .map((file) => file.filename.slice(folder.length + 1, -".liquid".length))
+    .slice(0, MAX_CONTEXT_FILES);
+}
+
+/** Compact summary of a theme's design settings and files, used to ground AI generation. */
+export async function loadThemeContext(
+  admin: AdminGraphql,
+  themeId: string,
+): Promise<ThemeContext | null> {
+  const response = await admin.graphql(
+    `#graphql
+      query AiEditorThemeContext($id: ID!, $filenames: [String!]!) {
+        theme(id: $id) {
+          name
+          role
+          files(filenames: $filenames) {
+            nodes {
+              filename
+              body {
+                ... on OnlineStoreThemeFileBodyText {
+                  content
+                }
+              }
+            }
+          }
+        }
+      }`,
+    {
+      variables: {
+        id: themeId,
+        filenames: ["config/settings_schema.json", "config/settings_data.json"],
+      },
+    },
+  );
+  const json = await response.json();
+  graphqlErrors(json);
+  const theme = json.data?.theme;
+  if (!theme) return null;
+
+  const contents = new Map<string, string>(
+    (theme.files?.nodes ?? []).map((file: { filename: string; body?: { content?: string } }) => [
+      file.filename,
+      file.body?.content ?? "",
+    ]),
+  );
+  const schema = parseThemeJson(contents.get("config/settings_schema.json"));
+  const data = parseThemeJson(contents.get("config/settings_data.json"));
+
+  const groups: any[] = Array.isArray(schema) ? schema : [];
+  const info = groups.find((group) => group?.name === "theme_info") ?? {};
+  const designSettings = groups
+    .flatMap((group) => (Array.isArray(group?.settings) ? group.settings : []))
+    .filter((setting: any) => setting?.id && CONTEXT_SETTING_TYPES.has(setting.type))
+    .map((setting: any) => ({ id: String(setting.id), type: String(setting.type) }));
+
+  const current =
+    typeof data?.current === "string" ? data?.presets?.[data.current] : data?.current;
+  const colorSchemes = Object.keys(current?.color_schemes ?? {});
+
+  const files = await listThemeFiles(admin, themeId).catch(() => []);
+
+  return {
+    name: String(theme.name ?? ""),
+    role: String(theme.role ?? ""),
+    themeName: String(info.theme_name ?? ""),
+    themeVersion: String(info.theme_version ?? ""),
+    themeAuthor: String(info.theme_author ?? ""),
+    colorSchemes,
+    hasColorSchemeGroup: designSettings.some((setting) => setting.type === "color_scheme_group"),
+    globalSettings: designSettings.slice(0, MAX_CONTEXT_SETTINGS),
+    sections: baseNames(files, "sections"),
+    blocks: baseNames(files, "blocks"),
+    snippets: baseNames(files, "snippets"),
+  };
+}
+
 export async function upsertThemeFile(
   admin: AdminGraphql,
   themeId: string,

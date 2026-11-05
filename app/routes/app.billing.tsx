@@ -80,7 +80,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           ok: false,
           openaiError,
           anthropicError,
-          error: "Fix the API key before the $75 plan can start.",
+          error: `Fix the API key before the $${PLAN_PRICES.byok} plan can start.`,
         } satisfies ActionData;
       }
 
@@ -207,7 +207,9 @@ export function BillingView({
               </s-paragraph>
               <s-unordered-list>
                 <s-list-item>ChatGPT and Claude models</s-list-item>
-                <s-list-item>Usage billed through this $200 plan</s-list-item>
+                <s-list-item>
+                  {`Usage billed through this $${PLAN_PRICES.hosted} plan`}
+                </s-list-item>
                 <s-list-item>Best if you do not want to manage API keys</s-list-item>
               </s-unordered-list>
               <Form method="post" action="/app/billing">

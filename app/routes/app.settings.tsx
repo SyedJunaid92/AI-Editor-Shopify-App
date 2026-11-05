@@ -13,6 +13,7 @@ import {
   getShopKeyStatus,
   saveValidatedKeys,
 } from "../lib/shop-settings.server";
+import { PLAN_PRICES } from "../lib/plans";
 
 type ActionData = {
   ok?: boolean;
@@ -112,8 +113,7 @@ export default function SettingsPage() {
 
           {actionData?.ok ? (
             <s-banner heading="Keys ready" tone="success">
-              You can subscribe to the $75 plan. The editor will offer models
-              only for the keys that were saved.
+              {`You can subscribe to the $${PLAN_PRICES.byok} plan. The editor will offer models only for the keys that were saved.`}
             </s-banner>
           ) : null}
 

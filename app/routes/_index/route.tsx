@@ -2,6 +2,7 @@ import type { LoaderFunctionArgs } from "react-router";
 import { redirect, Form, useLoaderData } from "react-router";
 
 import { login } from "../../shopify.server";
+import { PLAN_PRICES } from "../../lib/plans";
 
 import styles from "./styles.module.css";
 
@@ -44,11 +45,11 @@ export default function App() {
             or edit Liquid, JSON templates, JavaScript, CSS, or GraphQL.
           </li>
           <li>
-            <strong>Your keys · $75 / month</strong>. Add a ChatGPT key, a
+            <strong>{`Your keys · $${PLAN_PRICES.byok} / month`}</strong>. Add a ChatGPT key, a
             Claude key, or both, then subscribe through Shopify billing.
           </li>
           <li>
-            <strong>Hosted keys · $200 / month</strong>. Use the app&apos;s API
+            <strong>{`Hosted keys · $${PLAN_PRICES.hosted} / month`}</strong>. Use the app&apos;s API
             keys with the same editor, billed as a recurring Shopify charge.
           </li>
         </ul>

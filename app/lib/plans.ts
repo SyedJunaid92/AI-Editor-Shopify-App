@@ -2,8 +2,8 @@ export const BYOK_PLAN = "AI Editor - Your API keys";
 export const HOSTED_PLAN = "AI Editor - Hosted API";
 
 export const PLAN_PRICES = {
-  byok: 75,
-  hosted: 200,
+  byok: 120,
+  hosted: 300,
 } as const;
 
 export type PlanKind = "byok" | "hosted";

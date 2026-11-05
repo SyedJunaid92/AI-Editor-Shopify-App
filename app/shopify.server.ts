@@ -5,7 +5,7 @@ import {
   BillingInterval,
   shopifyApp,
 } from "@shopify/shopify-app-react-router/server";
-import { BYOK_PLAN, HOSTED_PLAN } from "./lib/plans";
+import { BYOK_PLAN, HOSTED_PLAN, PLAN_PRICES } from "./lib/plans";
 import { createSessionStorage } from "./session-storage.server";
 
 import { getAppUrl } from "./utils/app-url";
@@ -26,7 +26,7 @@ const shopify = shopifyApp({
     [BYOK_PLAN]: {
       lineItems: [
         {
-          amount: 75,
+          amount: PLAN_PRICES.byok,
           currencyCode: "USD",
           interval: BillingInterval.Every30Days,
         },
@@ -35,7 +35,7 @@ const shopify = shopifyApp({
     [HOSTED_PLAN]: {
       lineItems: [
         {
-          amount: 200,
+          amount: PLAN_PRICES.hosted,
           currencyCode: "USD",
           interval: BillingInterval.Every30Days,
         },

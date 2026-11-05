@@ -9,6 +9,7 @@ import { useFetcher, useLoaderData } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { getBillingState, requirePaidPlan } from "../lib/billing.server";
+import { PLAN_PRICES } from "../lib/plans";
 import { BillingView } from "./app.billing";
 import { generateShopifyCode } from "../lib/ai.server";
 import { resolveModelApiKey } from "../lib/credentials.server";
@@ -944,7 +945,9 @@ function EditorScreen({
               <div className={styles.assistantFooter}>
                 <span>{data.subscriptionName}</span>
                 <span>
-                  {data.plan === "byok" ? "$75 / 30 days" : "$200 / 30 days"}
+                  {data.plan === "byok"
+                    ? `$${PLAN_PRICES.byok} / 30 days`
+                    : `$${PLAN_PRICES.hosted} / 30 days`}
                 </span>
               </div>
             </aside>

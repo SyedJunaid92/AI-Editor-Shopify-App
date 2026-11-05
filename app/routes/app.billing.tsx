@@ -8,6 +8,7 @@ import { Form, useActionData, useLoaderData, useNavigation } from "react-router"
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import {
+  cancelPlan,
   embeddedAdminUrl,
   getBillingState,
   requestPlan,
@@ -36,6 +37,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const { session, billing, billingState } = await getBillingState(request);
   const form = await request.formData();
   const intent = String(form.get("intent") || "");
+
+  if (intent === "cancel-plan") {
+    if (!billingState.subscriptionId) {
+      return { ok: false, error: "There is no active plan to cancel." } satisfies ActionData;
+    }
+    return cancelPlan(
+      billing,
+      billingState.subscriptionId,
+      billingState.isTest,
+    );
+  }
 
   if (intent === "subscribe-hosted") {
     return requestPlan(
@@ -113,7 +125,13 @@ export function BillingView({
   const shopify = useAppBridge();
   const busy = navigation.state !== "idle";
 
+  const cancelling =
+    busy && navigation.formData?.get("intent") === "cancel-plan";
+
   useEffect(() => {
+    if (actionData?.ok) {
+      shopify.toast.show("Plan cancelled");
+    }
     if (actionData?.error) {
       shopify.toast.show(actionData.error, { isError: true });
     }
@@ -123,10 +141,34 @@ export function BillingView({
     <s-page heading="Choose a plan">
       <s-stack direction="block" gap="base">
         {billingState.hasActivePayment ? (
-          <s-banner heading="Active subscription" tone="success">
-            {billingState.subscriptionName}. You can switch plans at any time.
-            Shopify prorates the change after the merchant approves it.
-          </s-banner>
+          <>
+            <s-banner heading="Active subscription" tone="success">
+              {billingState.subscriptionName}. You can switch plans at any
+              time. Shopify prorates the change after the merchant approves it.
+              Cancelling credits the unused days in this period and locks the
+              editor until you subscribe again.
+            </s-banner>
+            <Form
+              method="post"
+              action="/app/billing"
+              onSubmit={(event) => {
+                const confirmed = window.confirm(
+                  "Cancel this plan? Shopify credits the unused days in this period, and the editor locks until you subscribe again.",
+                );
+                if (!confirmed) event.preventDefault();
+              }}
+            >
+              <input type="hidden" name="intent" value="cancel-plan" />
+              <s-button
+                type="submit"
+                tone="critical"
+                {...(cancelling ? { loading: true } : {})}
+                disabled={busy || !billingState.subscriptionId}
+              >
+                Cancel plan
+              </s-button>
+            </Form>
+          </>
         ) : (
           <s-banner heading="Choose a plan to open the editor" tone="info">
             {billingState.isTest
@@ -136,7 +178,7 @@ export function BillingView({
         )}
 
         {actionData?.error ? (
-          <s-banner heading="Billing could not start" tone="critical">
+          <s-banner heading="Billing could not be updated" tone="critical">
             {actionData.error}
             {actionData.openaiError ? ` OpenAI: ${actionData.openaiError}` : ""}
             {actionData.anthropicError

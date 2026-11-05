@@ -83,6 +83,25 @@ export async function requirePaidPlan(request: Request) {
   return context;
 }
 
+export async function cancelPlan(
+  billing: Awaited<ReturnType<typeof authenticate.admin>>["billing"],
+  subscriptionId: string,
+  isTest: boolean,
+) {
+  try {
+    await billing.cancel({
+      subscriptionId,
+      isTest,
+      prorate: true,
+    });
+    return { ok: true as const };
+  } catch (error) {
+    if (error instanceof Response) throw error;
+    console.error(error);
+    return { ok: false as const, error: billingErrorMessage(error) };
+  }
+}
+
 export async function requestPlan(
   billing: Awaited<ReturnType<typeof authenticate.admin>>["billing"],
   plan: typeof BYOK_PLAN | typeof HOSTED_PLAN,

@@ -39,6 +39,13 @@ export function ErrorBoundary() {
     }
   }
 
+  const message =
+    error instanceof Error
+      ? error.message
+      : isRouteErrorResponse(error) && error.data
+        ? String(error.data)
+        : "The app page did not load. Reload AI Editor from the Shopify admin.";
+
   return (
     <main
       style={{
@@ -48,7 +55,7 @@ export function ErrorBoundary() {
       }}
     >
       <h1 style={{ fontSize: 28, marginTop: 0 }}>AI Editor</h1>
-      <p>The app page did not load. Reload AI Editor from the Shopify admin.</p>
+      <p>{message}</p>
     </main>
   );
 }

@@ -118,6 +118,11 @@ export function BillingView({
   return (
     <s-page heading="Choose a plan">
       <s-stack direction="block" gap="base">
+        {billingState.billingError ? (
+          <s-banner heading="Could not check the current plan" tone="critical">
+            {billingState.billingError}
+          </s-banner>
+        ) : null}
         {billingState.hasActivePayment ? (
           <>
             <s-banner

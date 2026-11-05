@@ -1,5 +1,11 @@
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
-import { Outlet, redirect, useLoaderData, useRouteError } from "react-router";
+import {
+  isRouteErrorResponse,
+  Outlet,
+  redirect,
+  useLoaderData,
+  useRouteError,
+} from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 
@@ -38,7 +44,31 @@ export default function App() {
 }
 
 export function ErrorBoundary() {
-  return boundary.error(useRouteError());
+  const error = useRouteError();
+  try {
+    return boundary.error(error);
+  } catch (caught) {
+    if (isRouteErrorResponse(error)) {
+      const html = typeof error.data === "string" ? error.data : "";
+      if (html) return <div dangerouslySetInnerHTML={{ __html: html }} />;
+      return <div>Handling response</div>;
+    }
+
+    const message =
+      caught instanceof Error ? caught.message : "The app page did not load.";
+    return (
+      <main
+        style={{
+          fontFamily: "Inter, sans-serif",
+          padding: 24,
+          color: "#1a1a1a",
+        }}
+      >
+        <h1 style={{ fontSize: 28, marginTop: 0 }}>AI Editor</h1>
+        <p>{message}</p>
+      </main>
+    );
+  }
 }
 
 export const headers: HeadersFunction = (headersArgs) => {

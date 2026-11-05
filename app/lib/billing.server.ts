@@ -22,6 +22,7 @@ export type BillingState = {
   subscriptionName: string | null;
   subscriptionId: string | null;
   isTest: boolean;
+  billingError: string | null;
 };
 
 type AdminRedirect = Awaited<ReturnType<typeof authenticate.admin>>["redirect"];
@@ -82,9 +83,17 @@ export async function getBillingState(request: Request): Promise<{
   const { admin, session, redirect } = await authenticate.admin(request);
   const { shopId, isTest } = await loadShop(admin);
   const url = new URL(request.url);
-  const subscription = await fetchActiveSubscription(shopId, {
-    fresh: url.searchParams.has("plan_handle") || url.searchParams.has("charge_id"),
-  });
+  let subscription: Awaited<ReturnType<typeof fetchActiveSubscription>> = null;
+  let billingError: string | null = null;
+  try {
+    subscription = await fetchActiveSubscription(shopId, {
+      fresh: url.searchParams.has("plan_handle") || url.searchParams.has("charge_id"),
+    });
+  } catch (error) {
+    billingError =
+      error instanceof Error ? error.message : "Could not check the Shopify plan.";
+    console.error("Plan lookup failed", billingError);
+  }
   const items = subscription?.items ?? [];
   const matched = items.find(
     (item) => planKindFromHandle(item.handle) || planKindFromHandle(item.description),
@@ -106,6 +115,7 @@ export async function getBillingState(request: Request): Promise<{
         plan && planHandle ? planSubscriptionLabel(plan, planHandle) : planHandle,
       subscriptionId: subscription?.legacySubscriptionId ?? null,
       isTest,
+      billingError,
     },
   };
 }

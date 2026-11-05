@@ -278,6 +278,16 @@ export function BillingView({
             </s-stack>
           </s-section>
         </s-grid>
+        <s-section heading="Add the block to your theme">
+          <s-stack direction="block" gap="base">
+            <s-paragraph>
+              The AI Editor block works on Online Store 2.0 themes. Choose the
+              theme, then add, reorder, and configure the block in the theme
+              editor. Vintage themes are not supported.
+            </s-paragraph>
+            <s-button href="/app/onboarding">Open theme setup</s-button>
+          </s-stack>
+        </s-section>
       </s-stack>
     </s-page>
   );

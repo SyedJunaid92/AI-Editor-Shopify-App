@@ -1,0 +1,44 @@
+.page {
+  min-height: 100%;
+  margin: 0;
+  padding: 48px 20px 72px;
+  background: #f6f6f7;
+  color: #1a1a1a;
+  font-family: Inter, sans-serif;
+}
+
+.article {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 36px 40px;
+  background: #fff;
+  border: 1px solid #e3e3e3;
+  border-radius: 12px;
+}
+
+.article h1 {
+  margin: 0 0 8px;
+  font-size: 32px;
+  line-height: 1.2;
+}
+
+.article h2 {
+  margin: 28px 0 8px;
+  font-size: 18px;
+}
+
+.article p,
+.article li {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.article ul {
+  margin: 8px 0;
+  padding-left: 1.25rem;
+}
+
+.updated {
+  margin-top: 0;
+  color: #616161;
+}

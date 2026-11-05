@@ -220,6 +220,12 @@ export async function listThemeFiles(
   return files;
 }
 
+/** App blocks only render on Online Store 2.0 themes, which ship JSON templates. */
+export async function themeSupportsAppBlocks(admin: AdminGraphql, themeId: string) {
+  const indexTemplate = await loadThemeFile(admin, themeId, "templates/index.json");
+  return indexTemplate !== null;
+}
+
 export async function loadThemeFile(
   admin: AdminGraphql,
   themeId: string,

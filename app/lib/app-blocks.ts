@@ -79,11 +79,16 @@ export function blockPreviewDocument(block: { scope: string; html: string; css: 
 }
 
 /** Theme editor deep link that adds the AI Editor app block to a template. */
-export function addBlockDeepLink(apiKey: string, template = "index") {
+export function addBlockDeepLink(
+  apiKey: string,
+  template = "index",
+  themeGid?: string,
+) {
+  const themeId = themeGid ? themeGid.split("/").pop() || "current" : "current";
   const params = new URLSearchParams({
     template,
     addAppBlockId: `${apiKey}/${APP_BLOCK_HANDLE}`,
     target: "newAppsSection",
   });
-  return `shopify:admin/themes/current/editor?${params.toString()}`;
+  return `shopify:admin/themes/${themeId}/editor?${params.toString()}`;
 }

@@ -139,10 +139,39 @@ const TEMPLATE_PATHS: Record<string, string> = {
   "customers/account": "/account",
 };
 
+/** Filename tokens that identify which storefront page renders the file. */
+const TOKEN_PATHS: Array<[string, string]> = [
+  ["cart", "/cart"],
+  ["search", "/search"],
+  ["password", "/password"],
+  ["register", "/account/register"],
+  ["login", "/account/login"],
+  ["account", "/account"],
+  ["customer", "/account"],
+  ["customers", "/account"],
+  ["article", "/blogs/news"],
+  ["blog", "/blogs/news"],
+  ["collection", "/collections/all"],
+  ["collections", "/collections"],
+  ["product", "/collections/all"],
+  ["404", "/404"],
+];
+
 /** Storefront page that best shows the given theme file. */
 export function previewPathForFilename(filename: string) {
   const template = filename.match(/^templates\/(.+?)(\.[^/.]+)?\.(json|liquid)$/i)?.[1];
   if (template && TEMPLATE_PATHS[template]) return TEMPLATE_PATHS[template];
+
+  const tokens = new Set(
+    filename
+      .replace(/\.[^/.]+$/, "")
+      .split(/[^a-z0-9]+/i)
+      .map((part) => part.toLowerCase())
+      .filter(Boolean),
+  );
+  for (const [token, path] of TOKEN_PATHS) {
+    if (tokens.has(token)) return path;
+  }
   return "/";
 }
 
@@ -156,6 +185,16 @@ export function storefrontPreviewUrl(shop: string, themeGid: string, path: strin
   const url = new URL(normalizePreviewPath(path), `https://${shop}`);
   url.searchParams.set("preview_theme_id", themeNumericId(themeGid));
   return url.toString();
+}
+
+/** Same preview theme, different storefront page. */
+export function previewUrlForPath(previewUrl: string, path: string) {
+  const current = new URL(previewUrl);
+  const next = new URL(normalizePreviewPath(path), current.origin);
+  current.searchParams.forEach((value, key) => {
+    next.searchParams.set(key, value);
+  });
+  return next.toString();
 }
 
 export function themeEditorAdminPath(themeGid: string, filename: string) {

@@ -27,6 +27,7 @@ import {
   isTextThemeFile,
   preferredTheme,
   previewPathForFilename,
+  previewUrlForPath,
   storefrontPreviewUrl,
   themeEditorAdminPath,
   type ThemeFileNode,
@@ -487,14 +488,14 @@ function EditorScreen({
     );
   };
 
-  const startPreview = () => {
+  const startPreview = (path = previewPath) => {
     if (!canWrite || previewing) return;
     const form = new FormData();
     form.set("intent", "preview");
     form.set("themeId", themeId);
     form.set("filename", filename);
     form.set("currentCode", code);
-    form.set("previewPath", previewPath);
+    form.set("previewPath", path);
     previewFetcher.submit(form, { method: "POST" });
   };
 
@@ -805,13 +806,31 @@ function EditorScreen({
                   className={`${styles.input} ${styles.previewInput}`}
                   value={previewPath}
                   spellCheck={false}
-                  placeholder="/"
-                  onChange={(event) => setPreviewPath(event.currentTarget.value)}
+                  placeholder="/cart"
+                  onChange={(event) => {
+                    const next = event.currentTarget.value;
+                    setPreviewPath(next);
+                    setPreviewUrl((current) =>
+                      current ? previewUrlForPath(current, next) : current,
+                    );
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter") return;
+                    event.preventDefault();
+                    startPreview(event.currentTarget.value);
+                  }}
                 />
+                <s-button
+                  onClick={() => startPreview()}
+                  {...(previewing ? { loading: true } : {})}
+                  disabled={!canWrite || previewing}
+                >
+                  Open
+                </s-button>
                 <span className={styles.previewHint}>
                   {previewing
                     ? "Copying your theme and applying this file…"
-                    : "Opens your store with this unsaved file applied to a private copy of the theme. The live site is not changed."}
+                    : "Storefront page this file is previewed on. Press Enter to open it. The live theme is not changed."}
                 </span>
                 {previewUrl && !previewing ? (
                   <a

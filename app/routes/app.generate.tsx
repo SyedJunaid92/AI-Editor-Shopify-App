@@ -2,7 +2,6 @@ import type { ActionFunctionArgs, HeadersFunction, LoaderFunctionArgs } from "re
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { requirePaidPlan } from "../lib/billing.server";
 import { resolveModelApiKey } from "../lib/credentials.server";
-import "../lib/server-timeouts.server";
 import {
   extractCode,
   streamShopifyCode,
@@ -17,7 +16,7 @@ const GENERATION_LIMIT_MS = 12 * 60 * 1000;
 const FILE_TYPE_IDS = new Set<string>(FILE_TYPES.map((item) => item.id));
 
 export const config = {
-  maxDuration: 800,
+  maxDuration: 300,
 };
 
 export function loader(_args: LoaderFunctionArgs) {

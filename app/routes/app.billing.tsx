@@ -48,54 +48,35 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return cancelCurrentPlan(admin);
   }
 
-  if (intent === "subscribe-hosted") {
-    redirectToPlanSelection(redirect, session.shop);
-  }
-
-  if (intent === "subscribe-byok") {
-    const openaiKey = String(form.get("openaiKey") || "");
-    const anthropicKey = String(form.get("anthropicKey") || "");
-    const existing = await getShopKeyStatus(session.shop);
-    const typedOpenAi = openaiKey.trim();
-    const typedAnthropic = anthropicKey.trim();
-    const usingSavedKeys =
-      !typedOpenAi &&
-      !typedAnthropic &&
-      (existing.openaiValid || existing.anthropicValid);
-
-    if (!usingSavedKeys) {
-      if (!typedOpenAi && !typedAnthropic) {
-        return {
-          ok: false,
-          error: "Add a ChatGPT key, a Claude key, or both.",
-        } satisfies ActionData;
+  if (intent === "subscribe-hosted" || intent === "subscribe-byok") {
+    if (intent === "subscribe-byok") {
+      const typedOpenAi = String(form.get("openaiKey") || "").trim();
+      const typedAnthropic = String(form.get("anthropicKey") || "").trim();
+      if (typedOpenAi || typedAnthropic) {
+        let openaiError: string | undefined;
+        let anthropicError: string | undefined;
+        if (typedOpenAi) {
+          const result = await validateOpenAiKey(typedOpenAi);
+          if (!result.valid) openaiError = result.error;
+        }
+        if (typedAnthropic) {
+          const result = await validateAnthropicKey(typedAnthropic);
+          if (!result.valid) anthropicError = result.error;
+        }
+        if (openaiError || anthropicError) {
+          return {
+            ok: false,
+            openaiError,
+            anthropicError,
+            error: "Fix the API key, or clear both fields and approve the plan on Shopify.",
+          } satisfies ActionData;
+        }
+        await saveValidatedKeys(session.shop, {
+          openaiKey: typedOpenAi || undefined,
+          anthropicKey: typedAnthropic || undefined,
+        });
       }
-
-      let openaiError: string | undefined;
-      let anthropicError: string | undefined;
-      if (typedOpenAi) {
-        const result = await validateOpenAiKey(typedOpenAi);
-        if (!result.valid) openaiError = result.error;
-      }
-      if (typedAnthropic) {
-        const result = await validateAnthropicKey(typedAnthropic);
-        if (!result.valid) anthropicError = result.error;
-      }
-      if (openaiError || anthropicError) {
-        return {
-          ok: false,
-          openaiError,
-          anthropicError,
-          error: `Fix the API key before the $${PLAN_PRICES.byok} plan can start.`,
-        } satisfies ActionData;
-      }
-
-      await saveValidatedKeys(session.shop, {
-        openaiKey: typedOpenAi || undefined,
-        anthropicKey: typedAnthropic || undefined,
-      });
     }
-
     redirectToPlanSelection(redirect, session.shop);
   }
 
@@ -197,7 +178,14 @@ export function BillingView({
         )}
 
         {actionData?.error ? (
-          <s-banner heading="Billing could not be updated" tone="critical">
+          <s-banner
+            heading={
+              actionData.openaiError || actionData.anthropicError
+                ? "Check the API key"
+                : "Billing could not be updated"
+            }
+            tone="critical"
+          >
             {actionData.error}
             {actionData.openaiError ? ` OpenAI: ${actionData.openaiError}` : ""}
             {actionData.anthropicError
@@ -210,8 +198,9 @@ export function BillingView({
           <s-section heading={`Your API keys · $${PLAN_PRICES.byok} / month`}>
             <s-stack direction="block" gap="base">
               <s-paragraph>
-                Add a ChatGPT key, a Claude key, or both. Only the providers
-                with a valid key can be used in the editor.
+                Approve the plan on Shopify. Add a ChatGPT key, a Claude key,
+                or both now, or later from API keys. Only providers with a
+                valid key can be used in the editor.
               </s-paragraph>
               <s-unordered-list>
                 <s-list-item>One key unlocks that provider&apos;s models</s-list-item>

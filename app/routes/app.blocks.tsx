@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   ActionFunctionArgs,
   HeadersFunction,
@@ -8,9 +8,9 @@ import { useFetcher, useLoaderData, useLocation, useRevalidator } from "react-ro
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { getBillingState, requirePaidPlan } from "../lib/billing.server";
+import { GenerationStatus } from "../components/generation-status";
 import { BillingView } from "./app.billing";
-import { generateStorefrontBlock } from "../lib/ai.server";
-import { resolveModelApiKey } from "../lib/credentials.server";
+import { useGeneration } from "../lib/use-generation";
 import { getShopKeyStatus } from "../lib/shop-settings.server";
 import { AI_MODELS } from "../lib/models";
 import {
@@ -33,8 +33,6 @@ type ActionData = {
   intent?: string;
   error?: string;
   message?: string;
-  html?: string;
-  css?: string;
   block?: AiBlock;
   deletedKey?: string;
 };
@@ -78,7 +76,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin, session, billingState } = await requirePaidPlan(request);
+  const { admin } = await requirePaidPlan(request);
   const form = await request.formData();
   const intent = String(form.get("intent") || "");
   const key = String(form.get("key") || "").trim();
@@ -87,41 +85,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const css = String(form.get("css") || "");
   const scope = String(form.get("scope") || "");
 
-  if ((intent === "generate" || intent === "save") && !isValidBlockScope(scope)) {
+  if (intent === "save" && !isValidBlockScope(scope)) {
     return { ok: false, intent, error: "This block is missing its style scope. Reload the page." };
-  }
-
-  if (intent === "generate") {
-    const prompt = String(form.get("prompt") || "").trim();
-    const modelId = String(form.get("model") || "");
-    if (!prompt) {
-      return { ok: false, intent, error: "Describe the block you want." };
-    }
-    const resolved = await resolveModelApiKey({
-      shop: session.shop,
-      plan: billingState.plan!,
-      modelId,
-    });
-    if (!("apiKey" in resolved) || !resolved.apiKey) {
-      return { ok: false, intent, error: "error" in resolved ? resolved.error : "Missing API key." };
-    }
-    try {
-      const output = await generateStorefrontBlock({
-        apiKey: resolved.apiKey,
-        modelId,
-        prompt,
-        scopeClass: scope,
-        currentHtml: html,
-        currentCss: css,
-      });
-      return { ok: true, intent, ...splitGeneratedBlock(output), message: "Block generated." };
-    } catch (error) {
-      return {
-        ok: false,
-        intent,
-        error: error instanceof Error ? error.message : "Generation failed.",
-      };
-    }
   }
 
   if (intent === "save") {
@@ -192,8 +157,14 @@ function BlocksScreen({
   const fetcher = useFetcher<ActionData>();
   const revalidator = useRevalidator();
   const shopify = useAppBridge();
+  const generation = useGeneration();
+  const draftBeforeGeneration = useRef<Draft | null>(null);
+  const previewTimer = useRef<number | null>(null);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(() => emptyDraft());
+  const latestDraft = useRef(draft);
+  const [previewDraft, setPreviewDraft] = useState(draft);
+  latestDraft.current = draft;
   const [keyEdited, setKeyEdited] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState(data.models[0]?.id ?? "gpt-4o");
@@ -206,8 +177,33 @@ function BlocksScreen({
     ? saved.name !== draft.name || saved.html !== draft.html || saved.css !== draft.css
     : Boolean(draft.name || draft.html || draft.css);
   const pendingIntent = fetcher.state !== "idle" ? fetcher.formData?.get("intent") : null;
-  const busy = fetcher.state !== "idle";
-  const previewDoc = useMemo(() => blockPreviewDocument(draft), [draft]);
+  const busy = fetcher.state !== "idle" || generation.generating;
+  useEffect(() => {
+    if (!generation.generating) {
+      if (previewTimer.current) {
+        window.clearTimeout(previewTimer.current);
+        previewTimer.current = null;
+      }
+      return;
+    }
+    if (previewTimer.current) return;
+    previewTimer.current = window.setTimeout(() => {
+      previewTimer.current = null;
+      setPreviewDraft(latestDraft.current);
+    }, 500);
+  }, [draft, generation.generating]);
+
+  useEffect(
+    () => () => {
+      if (previewTimer.current) window.clearTimeout(previewTimer.current);
+    },
+    [],
+  );
+
+  const previewDoc = useMemo(
+    () => blockPreviewDocument(generation.generating ? previewDraft : draft),
+    [draft, previewDraft, generation.generating],
+  );
 
   const availableModels = useMemo(() => {
     if (data.plan === "byok") {
@@ -227,9 +223,6 @@ function BlocksScreen({
   useEffect(() => {
     const result = fetcher.data;
     if (!result) return;
-    if (result.ok && result.intent === "generate") {
-      setDraft((current) => ({ ...current, html: result.html ?? "", css: result.css ?? "" }));
-    }
     if (result.ok && result.intent === "save" && result.block) {
       setSelectedKey(result.block.key);
       setKeyEdited(false);
@@ -250,6 +243,10 @@ function BlocksScreen({
     !dirty || window.confirm("Discard unsaved changes to this block?");
 
   const selectBlock = (block: AiBlock) => {
+    if (generation.generating) {
+      shopify.toast.show("Stop the generation before switching blocks.");
+      return;
+    }
     if (block.key === selectedKey || !confirmDiscard()) return;
     setSelectedKey(block.key);
     setDraft(draftFromBlock(block));
@@ -257,6 +254,10 @@ function BlocksScreen({
   };
 
   const newBlock = () => {
+    if (generation.generating) {
+      shopify.toast.show("Stop the generation before starting a new block.");
+      return;
+    }
     if (!confirmDiscard()) return;
     setSelectedKey(null);
     setDraft(emptyDraft());
@@ -277,15 +278,52 @@ function BlocksScreen({
     fetcher.submit(form, { method: "POST" });
   };
 
+  const applyGenerated = (output: string) => {
+    const split = splitGeneratedBlock(output);
+    setDraft((current) => ({ ...current, html: split.html, css: split.css }));
+  };
+
   const generate = () => {
-    if (busy || !prompt.trim() || !availableModels.length) return;
+    if (generation.generating || busy || !prompt.trim() || !availableModels.length) return;
     let values = draft;
     if (isNew && !draft.name.trim()) {
       const name = prompt.trim().slice(0, 40);
       values = { ...draft, name, key: keyEdited ? draft.key : slugifyBlockKey(name) };
       setDraft(values);
     }
-    submit("generate", values);
+    draftBeforeGeneration.current = values;
+    setPreviewDraft(values);
+    void generation.run(
+      {
+        kind: "block",
+        prompt,
+        model,
+        scope: values.scope,
+        currentHtml: values.html,
+        currentCss: values.css,
+      },
+      {
+        onCode: applyGenerated,
+        onDone: (output) => {
+          applyGenerated(output);
+          shopify.toast.show("Block generated.");
+        },
+        onStop: (partial) => {
+          if (partial.trim()) applyGenerated(partial);
+          else if (draftBeforeGeneration.current) setDraft(draftBeforeGeneration.current);
+          shopify.toast.show(
+            partial.trim()
+              ? "Generation stopped. The block kept what was written so far."
+              : "Generation stopped.",
+          );
+        },
+        onError: (message, partial) => {
+          if (partial.trim()) applyGenerated(partial);
+          else if (draftBeforeGeneration.current) setDraft(draftBeforeGeneration.current);
+          shopify.toast.show(message, { isError: true });
+        },
+      },
+    );
   };
 
   const remove = () => {
@@ -439,12 +477,6 @@ function BlocksScreen({
                   </div>
                 </div>
                 <div className={styles.previewStage}>
-                  {pendingIntent === "generate" ? (
-                    <div className={styles.overlay}>
-                      <span className={styles.spinner} aria-hidden="true" />
-                      Designing your block…
-                    </div>
-                  ) : null}
                   {draft.html.trim() ? (
                     <iframe
                       title="Block preview"
@@ -482,6 +514,7 @@ function BlocksScreen({
                   aria-label={codeTab === "html" ? "Block HTML" : "Block CSS"}
                   className={`${styles.codeEditor} ${styles.blockEditor}`}
                   value={codeTab === "html" ? draft.html : draft.css}
+                  readOnly={generation.generating}
                   wrap="off"
                   spellCheck={false}
                   placeholder={
@@ -567,16 +600,26 @@ function BlocksScreen({
                   ))}
                 </div>
 
+                <GenerationStatus
+                  generating={generation.generating}
+                  status={generation.status}
+                  preview={generation.preview}
+                  elapsedLabel={generation.elapsedLabel}
+                />
+
                 <button
                   type="button"
                   className={styles.primaryButton}
-                  onClick={generate}
-                  disabled={busy || !availableModels.length || !prompt.trim()}
+                  onClick={generation.generating ? generation.cancel : generate}
+                  disabled={
+                    !generation.generating &&
+                    (busy || !availableModels.length || !prompt.trim())
+                  }
                 >
-                  {pendingIntent === "generate" ? (
+                  {generation.generating ? (
                     <>
                       <span className={styles.spinner} aria-hidden="true" />
-                      Generating…
+                      Stop
                     </>
                   ) : draft.html.trim() ? (
                     "Edit block with AI"
@@ -584,7 +627,11 @@ function BlocksScreen({
                     "Generate block"
                   )}
                 </button>
-                <span className={styles.hint}>Ctrl + Enter to run</span>
+                <span className={styles.hint}>
+                  {generation.generating
+                    ? "The block updates as the model writes. This can take several minutes."
+                    : "Ctrl + Enter to run"}
+                </span>
               </div>
             </aside>
           </div>

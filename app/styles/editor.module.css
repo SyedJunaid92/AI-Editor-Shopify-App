@@ -603,6 +603,67 @@
   text-align: center;
 }
 
+.liveBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #0f1419;
+  color: #e6e1cf;
+}
+
+.liveStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.liveTime {
+  margin-left: auto;
+  color: #8b96a3;
+  font-variant-numeric: tabular-nums;
+}
+
+.liveText {
+  max-height: 9rem;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.liveLabel {
+  color: #8b96a3;
+}
+
+.liveWait {
+  margin: 0;
+  color: #8b96a3;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.caret {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.95em;
+  margin-left: 1px;
+  background: #e6e1cf;
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
 .assistantFooter {
   display: flex;
   justify-content: space-between;

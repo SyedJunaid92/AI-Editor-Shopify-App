@@ -51,6 +51,16 @@ export default defineConfig({
   plugins: [
     reactRouter(),
     tsconfigPaths(),
+    {
+      name: "long-generation-timeout",
+      configureServer(server) {
+        const httpServer = server.httpServer;
+        if (!httpServer || !("requestTimeout" in httpServer)) return;
+        httpServer.requestTimeout = 0;
+        httpServer.timeout = 0;
+        httpServer.keepAliveTimeout = 15 * 60 * 1000;
+      },
+    },
   ],
   build: {
     assetsInlineLimit: 0,

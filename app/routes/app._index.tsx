@@ -10,14 +10,13 @@ import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { getBillingState, requirePaidPlan } from "../lib/billing.server";
 import { PLAN_PRICES } from "../lib/plans";
+import { GenerationStatus } from "../components/generation-status";
 import { BillingView } from "./app.billing";
-import { generateShopifyCode } from "../lib/ai.server";
-import { resolveModelApiKey } from "../lib/credentials.server";
+import { useGeneration } from "../lib/use-generation";
 import { getShopKeyStatus } from "../lib/shop-settings.server";
 import {
   AI_MODELS,
   FILE_TYPES,
-  getModel,
   type FileTypeId,
 } from "../lib/models";
 import {
@@ -36,7 +35,6 @@ import {
   ensurePreviewTheme,
   listThemeFiles,
   listThemes,
-  loadThemeContext,
   loadThemeFile,
   upsertThemeFile,
 } from "../lib/theme.server";
@@ -104,54 +102,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin, session, billingState } = await requirePaidPlan(request);
+  const { admin, session } = await requirePaidPlan(request);
   const form = await request.formData();
   const intent = String(form.get("intent") || "");
-
-  if (intent === "generate") {
-    const prompt = String(form.get("prompt") || "").trim();
-    const modelId = String(form.get("model") || "");
-    const fileType = String(form.get("fileType") || "liquid") as FileTypeId;
-    const currentCode = String(form.get("currentCode") || "");
-    const filename = String(form.get("filename") || "");
-
-    if (!prompt) {
-      return { ok: false, intent, error: "Describe the Shopify code you want." };
-    }
-
-    const resolved = await resolveModelApiKey({
-      shop: session.shop,
-      plan: billingState.plan!,
-      modelId,
-    });
-    if (!("apiKey" in resolved) || !resolved.apiKey) {
-      return { ok: false, intent, error: "error" in resolved ? resolved.error : "Missing API key." };
-    }
-
-    const themeId = String(form.get("themeId") || "");
-    const themeContext = themeId
-      ? await loadThemeContext(admin, themeId).catch(() => null)
-      : null;
-
-    try {
-      const code = await generateShopifyCode({
-        apiKey: resolved.apiKey,
-        modelId,
-        prompt,
-        currentCode,
-        fileType,
-        filename,
-        themeContext,
-      });
-      return { ok: true, intent, code, message: "Code generated." };
-    } catch (error) {
-      return {
-        ok: false,
-        intent,
-        error: error instanceof Error ? error.message : "Generation failed.",
-      };
-    }
-  }
 
   if (intent === "list-files") {
     const themeId = String(form.get("themeId") || "");
@@ -292,6 +245,8 @@ function EditorScreen({
   const filesFetcher = useFetcher<ActionData>();
   const previewFetcher = useFetcher<ActionData>();
   const shopify = useAppBridge();
+  const generation = useGeneration();
+  const codeBeforeGeneration = useRef("");
   const initialFilename = data.requestedFile || defaultThemeFilename(data.files);
   const [prompt, setPrompt] = useState("");
   const [code, setCode] = useState("");
@@ -317,12 +272,12 @@ function EditorScreen({
   const [cursor, setCursor] = useState({ line: 1, column: 1 });
   const loadedInitialFile = useRef(false);
   const gutterRef = useRef<HTMLPreElement>(null);
+  const codeRef = useRef<HTMLTextAreaElement>(null);
 
-  const selectedModel = getModel(model);
   const selectedTheme = data.themes.find((theme) => theme.id === themeId);
   const isLiveTheme = selectedTheme?.role === "MAIN";
   const pendingIntent = fetcher.state !== "idle" ? fetcher.formData?.get("intent") : null;
-  const busy = fetcher.state !== "idle" || filesFetcher.state !== "idle";
+  const busy = fetcher.state !== "idle" || filesFetcher.state !== "idle" || generation.generating;
   const previewing = previewFetcher.state !== "idle";
   const dirty = code !== savedCode;
   const canWrite = Boolean(themeId && filename.trim() && code.trim());
@@ -371,8 +326,6 @@ function EditorScreen({
       setSavedCode(result.code ?? "");
     } else if (result.ok && result.intent === "apply-theme") {
       setSavedCode(result.code ?? "");
-    } else if (result.ok && result.code) {
-      setCode(result.code);
     }
     if (result.ok && result.message) {
       shopify.toast.show(result.message);
@@ -426,15 +379,18 @@ function EditorScreen({
     setPreviewUrl("");
   }, [themeId, filename]);
 
+  useEffect(() => {
+    if (!generation.generating || !codeRef.current) return;
+    codeRef.current.scrollTop = codeRef.current.scrollHeight;
+    if (gutterRef.current) gutterRef.current.scrollTop = codeRef.current.scrollTop;
+  }, [code, generation.generating]);
+
   const submit = (intent: string, nextFilename = filename) => {
     const form = new FormData();
     form.set("intent", intent);
     form.set("prompt", prompt);
     form.set("model", model);
-    form.set(
-      "fileType",
-      intent === "generate" ? fileType : fileTypeForFilename(nextFilename),
-    );
+    form.set("fileType", fileTypeForFilename(nextFilename));
     form.set("currentCode", code);
     form.set("themeId", themeId);
     form.set("filename", nextFilename);
@@ -451,6 +407,10 @@ function EditorScreen({
   };
 
   const chooseFile = (file: ThemeFileNode) => {
+    if (generation.generating) {
+      shopify.toast.show("Stop the generation before switching files.");
+      return;
+    }
     if (file.filename === filename && !dirty) return;
     if (!confirmDiscard()) return;
     openFile(file.filename);
@@ -467,6 +427,10 @@ function EditorScreen({
   };
 
   const changeTheme = (nextThemeId: string) => {
+    if (generation.generating) {
+      shopify.toast.show("Stop the generation before switching themes.");
+      return;
+    }
     if (nextThemeId === themeId || !confirmDiscard()) return;
     setThemeId(nextThemeId);
     setCode("");
@@ -489,8 +453,38 @@ function EditorScreen({
   };
 
   const generate = () => {
-    if (busy || !availableModels.length || !prompt.trim()) return;
-    submit("generate");
+    if (generation.generating || busy || !availableModels.length || !prompt.trim()) return;
+    codeBeforeGeneration.current = code;
+    void generation.run(
+      {
+        kind: "editor",
+        prompt,
+        model,
+        fileType,
+        currentCode: code,
+        filename,
+        themeId,
+      },
+      {
+        onCode: setCode,
+        onDone: (next) => {
+          setCode(next);
+          shopify.toast.show("Code generated.");
+        },
+        onStop: (partial) => {
+          setCode(partial.trim() ? partial : codeBeforeGeneration.current);
+          shopify.toast.show(
+            partial.trim()
+              ? "Generation stopped. The editor kept what was written so far."
+              : "Generation stopped.",
+          );
+        },
+        onError: (message, partial) => {
+          setCode(partial.trim() ? partial : codeBeforeGeneration.current);
+          shopify.toast.show(message, { isError: true });
+        },
+      },
+    );
   };
 
   const startPreview = () => {
@@ -591,6 +585,7 @@ function EditorScreen({
                 id="theme-select"
                 className={styles.select}
                 value={themeId}
+                disabled={generation.generating}
                 onChange={(event) => changeTheme(event.currentTarget.value)}
               >
                 {data.themes.length ? (
@@ -727,9 +722,11 @@ function EditorScreen({
                     className={styles.pathInput}
                     aria-label="File path"
                     value={filename}
+                    readOnly={generation.generating}
                     spellCheck={false}
                     onChange={(event) => openFile(event.currentTarget.value)}
                     onKeyDown={(event) => {
+                      if (generation.generating) return;
                       if (event.key === "Enter" && filename.trim() && themeId) {
                         submit("load-file");
                       }
@@ -759,12 +756,10 @@ function EditorScreen({
               </div>
 
               <div className={styles.codeArea}>
-                {pendingIntent === "load-file" || pendingIntent === "generate" ? (
+                {pendingIntent === "load-file" ? (
                   <div className={styles.overlay}>
                     <span className={styles.spinner} aria-hidden="true" />
-                    {pendingIntent === "generate"
-                      ? `${selectedModel?.label ?? "The model"} is writing code…`
-                      : "Loading file…"}
+                    Loading file…
                   </div>
                 ) : null}
                 <pre ref={gutterRef} className={styles.gutter} aria-hidden="true">
@@ -772,9 +767,11 @@ function EditorScreen({
                 </pre>
                 <textarea
                   id="shopify-code"
+                  ref={codeRef}
                   aria-label="Code editor"
                   className={styles.codeEditor}
                   value={code}
+                  readOnly={generation.generating}
                   wrap="off"
                   spellCheck={false}
                   placeholder="Pick a file on the left, or describe what you want in the AI assistant."
@@ -923,16 +920,26 @@ function EditorScreen({
                   ))}
                 </div>
 
+                <GenerationStatus
+                  generating={generation.generating}
+                  status={generation.status}
+                  preview={generation.preview}
+                  elapsedLabel={generation.elapsedLabel}
+                />
+
                 <button
                   type="button"
                   className={styles.primaryButton}
-                  onClick={generate}
-                  disabled={busy || !availableModels.length || !prompt.trim()}
+                  onClick={generation.generating ? generation.cancel : generate}
+                  disabled={
+                    (!generation.generating &&
+                      (busy || !availableModels.length || !prompt.trim()))
+                  }
                 >
-                  {pendingIntent === "generate" ? (
+                  {generation.generating ? (
                     <>
                       <span className={styles.spinner} aria-hidden="true" />
-                      Generating…
+                      Stop
                     </>
                   ) : code.trim() ? (
                     "Edit code with AI"
@@ -940,7 +947,11 @@ function EditorScreen({
                     "Generate code"
                   )}
                 </button>
-                <span className={styles.hint}>Ctrl + Enter to run</span>
+                <span className={styles.hint}>
+                  {generation.generating
+                    ? "Writing into the editor as the model responds. This can take several minutes."
+                    : "Ctrl + Enter to run"}
+                </span>
               </div>
               <div className={styles.assistantFooter}>
                 <span>{data.subscriptionName}</span>

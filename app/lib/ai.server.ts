@@ -1,11 +1,9 @@
 import { getModel, type FileTypeId } from "./models";
+import { ANTHROPIC_VERSION, streamChat, type ChatStreamHandlers } from "./model-stream.server";
 import type { ThemeContext } from "./theme.server";
 
 const OPENAI_MODELS_URL = "https://api.openai.com/v1/models";
-const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const ANTHROPIC_MODELS_URL = "https://api.anthropic.com/v1/models";
-const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
-const ANTHROPIC_VERSION = "2026-10-21";
 
 export type KeyValidationResult = {
   openai: { valid: boolean; error?: string };
@@ -90,15 +88,33 @@ export async function generateShopifyCode(input: {
     throw new Error("Unknown model.");
   }
 
-  const system = buildSystemPrompt(input.fileType, input.filename, input.themeContext);
-  const user = buildUserPrompt(input.prompt, input.currentCode, input.fileType, input.filename);
-
-  const raw =
-    model.provider === "openai"
-      ? await completeOpenAi(input.apiKey, model.id, system, user)
-      : await completeAnthropic(input.apiKey, model.id, system, user);
-
+  const raw = await streamShopifyCode(input);
   return extractCode(raw);
+}
+
+export async function streamShopifyCode(
+  input: {
+    apiKey: string;
+    modelId: string;
+    prompt: string;
+    currentCode?: string;
+    fileType: FileTypeId;
+    filename?: string;
+    themeContext?: ThemeContext | null;
+  } & ChatStreamHandlers,
+) {
+  const model = getModel(input.modelId);
+  if (!model) throw new Error("Unknown model.");
+  return streamChat({
+    provider: model.provider,
+    apiKey: input.apiKey,
+    model: model.id,
+    system: buildSystemPrompt(input.fileType, input.filename, input.themeContext),
+    user: buildUserPrompt(input.prompt, input.currentCode, input.fileType, input.filename),
+    signal: input.signal,
+    onDelta: input.onDelta,
+    onThinking: input.onThinking,
+  });
 }
 
 export async function generateStorefrontBlock(input: {
@@ -109,10 +125,22 @@ export async function generateStorefrontBlock(input: {
   currentHtml?: string;
   currentCss?: string;
 }) {
+  const raw = await streamStorefrontBlock(input);
+  return extractCode(raw);
+}
+
+export async function streamStorefrontBlock(
+  input: {
+    apiKey: string;
+    modelId: string;
+    prompt: string;
+    scopeClass: string;
+    currentHtml?: string;
+    currentCss?: string;
+  } & ChatStreamHandlers,
+) {
   const model = getModel(input.modelId);
-  if (!model) {
-    throw new Error("Unknown model.");
-  }
+  if (!model) throw new Error("Unknown model.");
 
   const system = [
     "You are an expert Shopify storefront designer and front-end developer.",
@@ -131,12 +159,16 @@ export async function generateStorefrontBlock(input: {
     : "";
   const user = `${current ? "Edit this storefront block." : "Create a storefront block."}\n\nRequest:\n${input.prompt}${current}`;
 
-  const raw =
-    model.provider === "openai"
-      ? await completeOpenAi(input.apiKey, model.id, system, user)
-      : await completeAnthropic(input.apiKey, model.id, system, user);
-
-  return extractCode(raw);
+  return streamChat({
+    provider: model.provider,
+    apiKey: input.apiKey,
+    model: model.id,
+    system,
+    user,
+    signal: input.signal,
+    onDelta: input.onDelta,
+    onThinking: input.onThinking,
+  });
 }
 
 type ThemeFileKind =
@@ -335,116 +367,7 @@ function buildUserPrompt(
   return `${intro}\n\nRequest:\n${prompt}`;
 }
 
-function openAiSupportsCustomTemperature(model: string) {
-  const id = model.toLowerCase();
-  return !/^(gpt-5|o\d)/.test(id);
-}
-
-async function completeOpenAi(
-  apiKey: string,
-  model: string,
-  system: string,
-  user: string,
-) {
-  const response = await postOpenAi(apiKey, model, system, user, true);
-  const body = await safeJson(response);
-  if (response.ok) {
-    return openAiText(body);
-  }
-
-  const message = openaiError(body) || `OpenAI request failed (${response.status}).`;
-  if (!/temperature/i.test(message)) {
-    throw new Error(message);
-  }
-
-  const retry = await postOpenAi(apiKey, model, system, user, false);
-  const retryBody = await safeJson(retry);
-  if (!retry.ok) {
-    throw new Error(
-      openaiError(retryBody) || `OpenAI request failed (${retry.status}).`,
-    );
-  }
-  return openAiText(retryBody);
-}
-
-async function postOpenAi(
-  apiKey: string,
-  model: string,
-  system: string,
-  user: string,
-  withTemperature: boolean,
-) {
-  const payload: Record<string, unknown> = {
-    model,
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ],
-  };
-  if (withTemperature && openAiSupportsCustomTemperature(model)) {
-    payload.temperature = 0.2;
-  }
-
-  return fetch(OPENAI_CHAT_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-}
-
-function openAiText(body: any) {
-  const text = body?.choices?.[0]?.message?.content;
-  if (!text) {
-    throw new Error("OpenAI returned an empty response.");
-  }
-  return String(text);
-}
-
-async function completeAnthropic(
-  apiKey: string,
-  model: string,
-  system: string,
-  user: string,
-) {
-  const response = await fetch(ANTHROPIC_MESSAGES_URL, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": ANTHROPIC_VERSION,
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 8192,
-      system,
-      messages: [{ role: "user", content: user }],
-    }),
-  });
-
-  const body = await safeJson(response);
-  if (!response.ok) {
-    throw new Error(
-      anthropicError(body) || `Anthropic request failed (${response.status}).`,
-    );
-  }
-
-  const text = Array.isArray(body?.content)
-    ? body.content
-        .map((part: { text?: string }) => part.text || "")
-        .join("\n")
-        .trim()
-    : "";
-
-  if (!text) {
-    throw new Error("Claude returned an empty response.");
-  }
-  return text;
-}
-
-function extractCode(text: string) {
+export function extractCode(text: string) {
   const match = text.match(/```(?:[\w.+-]+)?\n([\s\S]*?)```/);
   return (match ? match[1] : text).replace(/\s+$/, "");
 }

@@ -53,10 +53,15 @@ export function stripScripts(html: string) {
 /** Splits model output into its CSS (from <style> tags) and the remaining markup. */
 export function splitGeneratedBlock(output: string) {
   const styles: string[] = [];
-  const html = output.replace(/<style[^>]*>([\s\S]*?)<\/style\s*>/gi, (_, css: string) => {
+  let html = output.replace(/<style[^>]*>([\s\S]*?)<\/style\s*>/gi, (_, css: string) => {
     styles.push(css.trim());
     return "";
   });
+  const unclosed = /<style[^>]*>([\s\S]*)$/i.exec(html);
+  if (unclosed && unclosed.index !== undefined) {
+    styles.push(unclosed[1].trim());
+    html = html.slice(0, unclosed.index);
+  }
   return { html: stripScripts(html).trim(), css: styles.join("\n\n") };
 }
 

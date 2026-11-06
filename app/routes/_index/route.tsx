@@ -10,7 +10,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   // Shop is present only when Shopify started install or opened the app.
   if (url.searchParams.get("shop")) {
-    throw redirect(`/app/blocks?${url.searchParams.toString()}`);
+    throw redirect(`/app?${url.searchParams.toString()}`);
   }
 
   return null;

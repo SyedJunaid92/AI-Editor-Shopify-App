@@ -4,7 +4,7 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { useFetcher, useLoaderData, useRevalidator } from "react-router";
+import { useFetcher, useLoaderData, useLocation, useRevalidator } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { getBillingState, requirePaidPlan } from "../lib/billing.server";
@@ -177,10 +177,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function BlocksPage() {
   const data = useLoaderData<typeof loader>();
+  const location = useLocation();
   if (data.view === "billing") {
     return <BillingView billingState={data.billingState} keyStatus={data.keyStatus} />;
   }
-  return <BlocksScreen data={data} />;
+  return <BlocksScreen key={location.pathname} data={data} />;
 }
 
 function BlocksScreen({
@@ -191,10 +192,12 @@ function BlocksScreen({
   const fetcher = useFetcher<ActionData>();
   const revalidator = useRevalidator();
   const shopify = useAppBridge();
-  const [selectedKey, setSelectedKey] = useState<string | null>(data.blocks[0]?.key ?? null);
-  const [draft, setDraft] = useState<Draft>(() =>
-    data.blocks[0] ? draftFromBlock(data.blocks[0]) : emptyDraft(),
-  );
+  const location = useLocation();
+  const heading = location.pathname.replace(/\/$/, "").endsWith("/blocks")
+    ? "AI blocks"
+    : "AI Editor";
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [draft, setDraft] = useState<Draft>(() => emptyDraft());
   const [keyEdited, setKeyEdited] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState(data.models[0]?.id ?? "gpt-4o");
@@ -303,7 +306,7 @@ function BlocksScreen({
   };
 
   return (
-    <s-page heading="AI blocks" inlineSize="large">
+    <s-page heading={heading} inlineSize="large">
       <s-stack direction="block" gap="base">
         <s-banner heading="Use AI blocks in the theme customizer" tone="info">
           Create a block here and save it. Then click Add to theme, and enter
@@ -349,7 +352,12 @@ function BlocksScreen({
                 <span className={styles.panelMeta}>{data.blocks.length}</span>
               </div>
               <div className={styles.searchBox}>
-                <button type="button" className={styles.primaryButton} onClick={newBlock}>
+                <button
+                  type="button"
+                  className={styles.primaryButton}
+                  aria-current={isNew ? "true" : undefined}
+                  onClick={newBlock}
+                >
                   New block
                 </button>
               </div>

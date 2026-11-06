@@ -33,6 +33,13 @@ export default function App() {
       polarisUrl="https://cdn.shopify.com/shopifycloud/polaris-1.js"
     >
       <s-app-nav>
+        <s-link
+          href="/app"
+          {...({ rel: "home" } as React.JSX.IntrinsicElements["s-link"])}
+        >
+          AI Editor
+        </s-link>
+        <s-link href="/app">AI Editor</s-link>
         <s-link href="/app/blocks">AI blocks</s-link>
         <s-link href="/app/onboarding">Theme setup</s-link>
         <s-link href="/app/billing">Billing</s-link>

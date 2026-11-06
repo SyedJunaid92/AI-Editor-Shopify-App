@@ -1,6 +1,6 @@
 [[extensions]]
-name = "Edit product template with AI Editor"
-description = "Open the product template in AI Editor"
+name = "Add AI Editor block"
+description = "Add the AI Editor app block to this product template"
 handle = "product-ai-link"
 uid = "95ba6245-d15f-515e-5a6e-2deb7aa30051e0408880"
 type = "admin_link"

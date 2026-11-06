@@ -8,6 +8,7 @@ import { Form, useActionData, useLoaderData, useNavigation } from "react-router"
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import {
+  cancelCurrentPlan,
   getBillingState,
   redirectToPlanSelection,
 } from "../lib/billing.server";
@@ -36,11 +37,18 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { session, redirect } = await getBillingState(request);
+  const { admin, session, redirect, billingState } = await getBillingState(request);
   const form = await request.formData();
   const intent = String(form.get("intent") || "");
 
-  if (intent === "cancel-plan" || intent === "subscribe-hosted") {
+  if (intent === "cancel-plan") {
+    if (!billingState.hasActivePayment) {
+      return { ok: false, error: "There is no active plan to cancel." } satisfies ActionData;
+    }
+    return cancelCurrentPlan(admin);
+  }
+
+  if (intent === "subscribe-hosted") {
     redirectToPlanSelection(redirect, session.shop);
   }
 
@@ -110,6 +118,9 @@ export function BillingView({
     busy && navigation.formData?.get("intent") === "cancel-plan";
 
   useEffect(() => {
+    if (actionData?.ok) {
+      shopify.toast.show("Plan cancelled");
+    }
     if (actionData?.error) {
       shopify.toast.show(actionData.error, { isError: true });
     }
@@ -130,7 +141,7 @@ export function BillingView({
               tone={billingState.plan ? "success" : "critical"}
             >
               {billingState.plan
-                ? `${billingState.subscriptionName}. You can switch or cancel on Shopify's plan page. Cancelling locks the editor until you subscribe again.`
+                ? `${billingState.subscriptionName}. Cancel ends the subscription and locks the editor until you subscribe again.`
                 : `Shopify returned plan handle ${billingState.planHandle || "none"}. This app unlocks ${BYOK_PLAN_HANDLE} and ${HOSTED_PLAN_HANDLE}.`}
             </s-banner>
             <s-button
@@ -140,16 +151,16 @@ export function BillingView({
               command="--show"
               disabled={busy}
             >
-              Manage plan
+              Cancel plan
             </s-button>
             <Form method="post" action="/app/billing" id="cancel-plan-form">
               <input type="hidden" name="intent" value="cancel-plan" />
             </Form>
-            <s-modal id="cancel-plan-modal" heading="Manage plan" size="small-100">
+            <s-modal id="cancel-plan-modal" heading="Cancel plan" size="small-100">
               <s-paragraph>
-                Shopify opens the plan page for {billingState.planHandle || "this app"}.
-                Switch or cancel there. Cancelling locks the editor until you
-                subscribe again.
+                Cancel {billingState.subscriptionName || "this plan"}. Shopify
+                credits unused days in this period, and the editor locks until
+                you subscribe again.
               </s-paragraph>
               <s-button
                 slot="primary-action"
@@ -163,7 +174,7 @@ export function BillingView({
                   if (form instanceof HTMLFormElement) form.requestSubmit();
                 }}
               >
-                Open plan page
+                Cancel plan
               </s-button>
               <s-button
                 slot="secondary-actions"

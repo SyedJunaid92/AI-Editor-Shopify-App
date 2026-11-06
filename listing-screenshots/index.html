@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Appify AI Editor listing screenshots</title>
+    <link rel="stylesheet" href="./editor.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #f1f1f1;
+        color: #303030;
+        font-family: "Segoe UI", Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      .shot {
+        position: relative;
+        box-sizing: border-box;
+        width: 1600px;
+        height: 900px;
+        padding: 16px 20px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow: hidden;
+        background: #f1f1f1;
+      }
+
+      .page-title {
+        margin: 4px 0 0;
+        font-size: 20px;
+        font-weight: 650;
+        line-height: 24px;
+        letter-spacing: -0.01em;
+      }
+
+      .workspace {
+        height: auto !important;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .btn {
+        box-sizing: border-box;
+        height: 28px;
+        padding: 0 12px;
+        border: 1px solid #c9cccf;
+        border-radius: 8px;
+        background: #fff;
+        color: #303030;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 550;
+        line-height: 26px;
+      }
+
+      .btn-primary {
+        border-color: #303030;
+        background: #303030;
+        color: #fff;
+        box-shadow: inset 0 -1px 0 #000, inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+
+      .banner {
+        display: flex;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: #eaf4ff;
+        border: 1px solid #c5dff8;
+      }
+
+      .banner strong {
+        display: block;
+        margin-bottom: 2px;
+        font-size: 13px;
+      }
+
+      .banner p {
+        margin: 0;
+        color: #303030;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .banner-icon {
+        flex: none;
+        width: 20px;
+        height: 20px;
+        margin-top: 1px;
+        border-radius: 50%;
+        background: #005bd3;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 20px;
+        text-align: center;
+      }
+
+      .toast {
+        position: absolute;
+        left: 50%;
+        bottom: 88px;
+        transform: translateX(-50%);
+        max-width: 560px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: #1a1a1a;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 550;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+      }
+
+      .faq {
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 8px 4px;
+        background: #fff;
+        border-radius: 8px;
+      }
+
+      .faq h3 {
+        margin: 0 0 10px;
+        font-size: 18px;
+      }
+
+      .faq details {
+        border-bottom: 1px solid #e3e3e3;
+        padding: 8px 2px;
+      }
+
+      .faq summary {
+        cursor: default;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .faq p {
+        margin: 8px 0 4px;
+        color: #616161;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .previewFrame.static {
+        height: auto;
+        min-height: 0;
+        padding: 16px 20px;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="shot" id="shot1">
+      <h1 class="page-title">AI Theme Editor</h1>
+      <div class="workspace">
+        <header class="toolbar">
+          <div class="toolbarGroup">
+            <label class="fieldLabel">Theme</label>
+            <select class="select">
+              <option>Horizon</option>
+            </select>
+            <span class="roleBadge">unpublished</span>
+          </div>
+          <div class="toolbarGroup">
+            <button class="btn" type="button">Copy</button>
+            <button class="btn" type="button">Theme editor</button>
+            <button class="btn" type="button">Preview</button>
+            <button class="btn btn-primary" type="button">Save</button>
+          </div>
+        </header>
+        <div class="body">
+          <aside class="explorer">
+            <div class="panelHeader">
+              <span class="panelTitle">Files</span>
+              <span class="panelMeta">18</span>
+            </div>
+            <div class="searchBox">
+              <input class="input" type="search" placeholder="Search files" value="" />
+            </div>
+            <div class="fileTree">
+              <button class="groupButton" type="button" aria-expanded="false">
+                <span class="chevron"></span><span>Layout</span><span class="panelMeta">2</span>
+              </button>
+              <button class="groupButton" type="button" aria-expanded="false">
+                <span class="chevron"></span><span>Templates</span><span class="panelMeta">6</span>
+              </button>
+              <button class="groupButton" type="button" aria-expanded="true">
+                <span class="chevron"></span><span>Sections</span><span class="panelMeta">4</span>
+              </button>
+              <button class="fileButton" type="button" aria-current="true">
+                <span class="fileIcon" data-ext="liquid"></span>
+                <span class="fileName">hero.liquid</span>
+                <span class="dirtyDot"></span>
+              </button>
+              <button class="fileButton" type="button">
+                <span class="fileIcon" data-ext="liquid"></span>
+                <span class="fileName">image-banner.liquid</span>
+              </button>
+              <button class="fileButton" type="button">
+                <span class="fileIcon" data-ext="liquid"></span>
+                <span class="fileName">featured-collection.liquid</span>
+              </button>
+              <button class="fileButton" type="button">
+                <span class="fileIcon" data-ext="json"></span>
+                <span class="fileName">header-group.json</span>
+              </button>
+              <button class="groupButton" type="button" aria-expanded="false">
+                <span class="chevron"></span><span>Assets</span><span class="panelMeta">6</span>
+              </button>
+            </div>
+          </aside>
+          <main class="editorPane">
+            <div class="tabBar">
+              <div class="tab">
+                <span class="fileIcon" data-ext="liquid"></span>
+                <input class="pathInput" value="sections/hero.liquid" readonly />
+                <span class="dirtyDot"></span>
+              </div>
+              <div class="tabActions">
+                <button class="ghostButton" type="button">Revert</button>
+                <button class="ghostButton" type="button">Reload</button>
+              </div>
+            </div>
+            <div class="codeArea">
+              <pre class="gutter">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16</pre>
+              <textarea class="codeEditor" readonly>&lt;div class="hero" id="shopify-section-{{ section.id }}"&gt;
+  &lt;p class="hero__eyebrow"&gt;{{ section.settings.eyebrow }}&lt;/p&gt;
+  &lt;h2&gt;{{ section.settings.heading }}&lt;/h2&gt;
+  &lt;p&gt;{{ section.settings.text }}&lt;/p&gt;
+  &lt;div class="hero__actions"&gt;
+    &lt;a class="hero__button" href="{{ section.settings.button_link }}"&gt;
+      {{ section.settings.button_label }}
+    &lt;/a&gt;
+    &lt;a class="hero__link" href="{{ section.settings.secondary_link }}"&gt;
+      {{ section.settings.secondary_label }}
+    &lt;/a&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+{% schema %}
+{ "name": "Hero", "presets": [{ "name": "Hero" }] }
+{% endschema %}</textarea>
+            </div>
+            <div class="previewBar">
+              <label class="fieldLabel">Preview page</label>
+              <input class="input previewInput" value="/" readonly />
+              <span class="previewHint">Opens your store with this unsaved file applied to a private copy of the theme. The live site is not changed.</span>
+            </div>
+            <footer class="statusBar">
+              <span>Liquid</span>
+              <span>Ln 1, Col 1</span>
+              <span>16 lines</span>
+              <span class="statusSpacer"></span>
+              <span class="saveState" data-state="dirty">Unsaved changes</span>
+              <span>Ctrl + S to save</span>
+            </footer>
+          </main>
+          <aside class="assistant">
+            <div class="panelHeader">
+              <span class="panelTitle">AI assistant</span>
+              <span class="panelMeta">Hosted keys</span>
+            </div>
+            <div class="assistantBody">
+              <div class="field">
+                <label class="fieldLabel">Model</label>
+                <select class="select"><option>Claude: Claude Sonnet 4.5</option></select>
+              </div>
+              <div class="field">
+                <label class="fieldLabel">Output type</label>
+                <select class="select"><option>Liquid</option></select>
+              </div>
+              <div class="field">
+                <label class="fieldLabel">Describe the change</label>
+                <textarea class="promptInput" readonly>A hero section with a heading, short text, and two buttons</textarea>
+              </div>
+              <div class="chips">
+                <button class="chip" type="button">Make this section fully responsive on mobile</button>
+                <button class="chip" type="button">Add theme editor settings to the schema</button>
+                <button class="chip" type="button">Improve accessibility and semantic HTML</button>
+                <button class="chip" type="button">Find and fix bugs in this code</button>
+              </div>
+              <button class="primaryButton" type="button">Edit code with AI</button>
+              <span class="hint">Ctrl + Enter to run</span>
+            </div>
+            <div class="assistantFooter">
+              <span>Hosted keys</span>
+              <span>Claude Sonnet 4.5</span>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="shot" id="shot2">
+      <h1 class="page-title">AI Theme Editor</h1>
+      <div class="workspace">
+        <header class="toolbar">
+          <div class="toolbarGroup">
+            <label class="fieldLabel">Theme</label>
+            <select class="select"><option>Horizon</option></select>
+            <span class="roleBadge">unpublished</span>
+          </div>
+          <div class="toolbarGroup">
+            <button class="btn" type="button">Copy</button>
+            <button class="btn" type="button">Theme editor</button>
+            <button class="btn" type="button">Preview</button>
+            <button class="btn btn-primary" type="button">Save</button>
+          </div>
+        </header>
+        <div class="body">
+          <aside class="explorer">
+            <div class="panelHeader">
+              <span class="panelTitle">Files</span>
+              <span class="panelMeta">18</span>
+            </div>
+            <div class="searchBox">
+              <input class="input" type="search" placeholder="Search files" />
+            </div>
+            <div class="fileTree">
+              <button class="groupButton" type="button" aria-expanded="false">
+                <span class="chevron"></span><span>Layout</span><span class="panelMeta">2</span>
+              </button>
+              <button class="groupButton" type="button" aria-expanded="true">
+                <span class="chevron"></span><span>Templates</span><span class="panelMeta">6</span>
+              </button>
+              <button class="fileButton" type="button" aria-current="true">
+                <span class="fileIcon" data-ext="json"></span>
+                <span class="fileName">page.landing.json</span>
+                <span class="dirtyDot"></span>
+              </button>
+              <button class="fileButton" type="button">
+                <span class="fileIcon" data-ext="json"></span>
+                <span class="fileName">index.json</span>
+              </button>
+              <button class="fileButton" type="button">
+                <span class="fileIcon" data-ext="json"></span>
+                <span class="fileName">product.json</span>
+              </button>
+              <button class="groupButton" type="button" aria-expanded="false">
+                <span class="chevron"></span><span>Sections</span><span class="panelMeta">4</span>
+              </button>
+            </div>
+          </aside>
+          <main class="editorPane">
+            <div class="tabBar">
+              <div class="tab">
+                <span class="fileIcon" data-ext="json"></span>
+                <input class="pathInput" value="templates/page.landing.json" readonly />
+                <span class="dirtyDot"></span>
+              </div>
+              <div class="tabActions">
+                <button class="ghostButton" type="button">Revert</button>
+                <button class="ghostButton" type="button">Reload</button>
+              </div>
+            </div>
+            <div class="codeArea">
+              <pre class="gutter">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16</pre>
+              <textarea class="codeEditor" readonly>{
+  "sections": {
+    "hero": {
+      "type": "hero",
+      "settings": {
+        "heading": "Summer collection",
+        "text": "New arrivals, ready to ship."
+      }
+    },
+    "faq": {
+      "type": "faq",
+      "settings": { "heading": "Questions" }
+    }
+  },
+  "order": ["hero", "faq"]
+}</textarea>
+            </div>
+            <div class="previewBar">
+              <label class="fieldLabel">Preview page</label>
+              <input class="input previewInput" value="/pages/summer-landing" readonly />
+              <span class="previewHint">Opens your store with this unsaved file applied to a private copy of the theme. The live site is not changed.</span>
+              <a class="previewLink" href="#preview">Open last preview</a>
+            </div>
+            <footer class="statusBar">
+              <span>JSON</span>
+              <span>Ln 1, Col 1</span>
+              <span>16 lines</span>
+              <span class="statusSpacer"></span>
+              <span class="saveState" data-state="dirty">Unsaved changes</span>
+              <span>Ctrl + S to save</span>
+            </footer>
+          </main>
+          <aside class="assistant">
+            <div class="panelHeader">
+              <span class="panelTitle">AI assistant</span>
+              <span class="panelMeta">Hosted keys</span>
+            </div>
+            <div class="assistantBody">
+              <div class="field">
+                <label class="fieldLabel">Model</label>
+                <select class="select"><option>ChatGPT: GPT-5</option></select>
+              </div>
+              <div class="field">
+                <label class="fieldLabel">Output type</label>
+                <select class="select"><option>JSON template / section</option></select>
+              </div>
+              <div class="field">
+                <label class="fieldLabel">Describe the change</label>
+                <textarea class="promptInput" readonly>Build a landing page template with a hero section and an FAQ</textarea>
+              </div>
+              <div class="chips">
+                <button class="chip" type="button">Make this section fully responsive on mobile</button>
+                <button class="chip" type="button">Add theme editor settings to the schema</button>
+              </div>
+              <button class="primaryButton" type="button">Edit code with AI</button>
+              <span class="hint">Ctrl + Enter to run</span>
+            </div>
+            <div class="assistantFooter">
+              <span>Hosted keys</span>
+              <span>GPT-5</span>
+            </div>
+          </aside>
+        </div>
+      </div>
+      <div class="toast">Preview ready. Your live theme was not changed.</div>
+    </section>
+
+    <section class="shot" id="shot3">
+      <h1 class="page-title">AI blocks</h1>
+      <div class="banner">
+        <span class="banner-icon">i</span>
+        <div>
+          <strong>Use AI blocks in the theme customizer</strong>
+          <p>Create a block here and save it. Then click Add to theme, and enter its Block ID in the AI Editor block settings.</p>
+        </div>
+      </div>
+      <div class="workspace">
+        <header class="toolbar">
+          <div class="toolbarGroup">
+            <span class="panelTitle">FAQ accordion</span>
+          </div>
+          <div class="toolbarGroup">
+            <button class="btn" type="button">Copy Block ID</button>
+            <button class="btn" type="button">Add to theme</button>
+            <button class="btn" type="button">Delete</button>
+            <button class="btn btn-primary" type="button">Save block</button>
+          </div>
+        </header>
+        <div class="body">
+          <aside class="explorer">
+            <div class="panelHeader">
+              <span class="panelTitle">Blocks</span>
+              <span class="panelMeta">3</span>
+            </div>
+            <div class="searchBox">
+              <button class="primaryButton" type="button">New block</button>
+            </div>
+            <div class="fileTree">
+              <button class="fileButton blockItem" type="button" aria-current="true">
+                <span class="fileName">FAQ accordion</span>
+                <span class="blockKey">faq-accordion</span>
+              </button>
+              <button class="fileButton blockItem" type="button">
+                <span class="fileName">Announcement banner</span>
+                <span class="blockKey">announcement-banner</span>
+              </button>
+              <button class="fileButton blockItem" type="button">
+                <span class="fileName">Testimonial section</span>
+                <span class="blockKey">testimonial-section</span>
+              </button>
+            </div>
+          </aside>
+          <main class="blockMain">
+            <div class="blockFields">
+              <div class="field">
+                <label class="fieldLabel">Name</label>
+                <input class="input" value="FAQ accordion" readonly />
+              </div>
+              <div class="field">
+                <label class="fieldLabel">Block ID</label>
+                <input class="input monoInput" value="faq-accordion" readonly />
+              </div>
+            </div>
+            <div class="previewPanel">
+              <div class="previewHeader">
+                <span class="panelTitle">Preview</span>
+                <div class="segmented">
+                  <button type="button" aria-pressed="true">Desktop</button>
+                  <button type="button">Mobile</button>
+                </div>
+              </div>
+              <div class="previewStage">
+                <div class="previewFrame static">
+                  <div class="faq">
+                    <h3>Questions</h3>
+                    <details open>
+                      <summary>How long does shipping take?</summary>
+                      <p>Most orders arrive in 3 to 5 business days.</p>
+                    </details>
+                    <details>
+                      <summary>Can I change my order?</summary>
+                    </details>
+                    <details>
+                      <summary>What is your return policy?</summary>
+                    </details>
+                    <details>
+                      <summary>Do you ship internationally?</summary>
+                    </details>
+                    <details>
+                      <summary>How do I track a package?</summary>
+                    </details>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="blockCode">
+              <div class="tabBar">
+                <div class="codeTabs">
+                  <button type="button" aria-selected="true">HTML</button>
+                  <button type="button">CSS</button>
+                </div>
+              </div>
+              <textarea class="codeEditor blockEditor" readonly>&lt;section class="aie-faq"&gt;
+  &lt;h2&gt;Questions&lt;/h2&gt;
+  &lt;details open&gt;
+    &lt;summary&gt;How long does shipping take?&lt;/summary&gt;
+    &lt;p&gt;Most orders arrive in 3 to 5 business days.&lt;/p&gt;
+  &lt;/details&gt;
+&lt;/section&gt;</textarea>
+            </div>
+          </main>
+          <aside class="assistant">
+            <div class="panelHeader">
+              <span class="panelTitle">AI assistant</span>
+              <span class="panelMeta">Hosted keys</span>
+            </div>
+            <div class="assistantBody">
+              <div class="field">
+                <label class="fieldLabel">Model</label>
+                <select class="select"><option>Claude: Claude Sonnet 4.5</option></select>
+              </div>
+              <div class="field">
+                <label class="fieldLabel">Describe the change</label>
+                <textarea class="promptInput" readonly>FAQ accordion with five questions</textarea>
+              </div>
+              <div class="chips">
+                <button class="chip" type="button">Announcement banner with a call-to-action button</button>
+                <button class="chip" type="button">FAQ accordion with five questions</button>
+                <button class="chip" type="button">Three-column feature grid with icons</button>
+                <button class="chip" type="button">Testimonial section with star ratings</button>
+              </div>
+              <button class="primaryButton" type="button">Edit block with AI</button>
+              <span class="hint">Ctrl + Enter to run</span>
+            </div>
+            <div class="assistantFooter">
+              <span>Hosted keys</span>
+              <span>Claude Sonnet 4.5</span>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+    <script>
+      const shot = new URLSearchParams(location.search).get("shot") || "1";
+      document.querySelectorAll(".shot").forEach((section) => {
+        section.hidden = section.id !== "shot" + shot;
+      });
+    </script>
+  </body>
+</html>

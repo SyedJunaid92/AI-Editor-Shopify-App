@@ -9,9 +9,9 @@ handle = "appify-ai-editor"
 automatically_update_urls_on_dev = true
 
 [access_scopes]
-# read_themes lists theme files for the editor. write_themes applies generated
-# Liquid to a theme and requires a Shopify theme-file API exemption for public apps.
-scopes = "read_themes,write_themes"
+# Storefront content is saved on the app installation and rendered by the
+# theme app extension. The app does not read or write theme files.
+scopes = ""
 
 [auth]
 redirect_urls = [

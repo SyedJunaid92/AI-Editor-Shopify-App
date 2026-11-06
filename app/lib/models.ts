@@ -32,16 +32,6 @@ export const AI_MODELS: AiModel[] = [
   },
 ];
 
-export const FILE_TYPES = [
-  { id: "liquid", label: "Liquid", language: "liquid" },
-  { id: "json", label: "JSON template / section", language: "json" },
-  { id: "javascript", label: "JavaScript", language: "javascript" },
-  { id: "css", label: "CSS", language: "css" },
-  { id: "graphql", label: "GraphQL", language: "graphql" },
-] as const;
-
-export type FileTypeId = (typeof FILE_TYPES)[number]["id"];
-
 export function getModel(id: string) {
   return AI_MODELS.find((model) => model.id === id) ?? null;
 }

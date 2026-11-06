@@ -1,6 +1,6 @@
 [[extensions]]
-name = "Edit collection template with AI Editor"
-description = "Open the collection template in AI Editor"
+name = "Add AI Editor block"
+description = "Add the AI Editor app block to this collection template"
 handle = "collection-ai-link"
 uid = "0d1193f8-caec-eb0f-1b12-84e32f9bee4ebaa50276"
 type = "admin_link"

@@ -1,6 +1,6 @@
 import prisma from "../db.server";
 import { authenticate } from "../shopify.server";
-import { fetchActiveSubscription } from "./partner-api.server";
+import { cancelActiveSubscription, fetchActiveSubscription } from "./partner-api.server";
 import {
   APP_HANDLE,
   planKindFromHandle,
@@ -118,6 +118,23 @@ export async function getBillingState(request: Request): Promise<{
       billingError,
     },
   };
+}
+
+export async function cancelCurrentPlan(admin: AdminGraphql) {
+  try {
+    const { shopId } = await loadShop(admin);
+    return await cancelActiveSubscription(shopId);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Shopify could not cancel the plan.";
+    if (/financials|access denied|not authorized/i.test(message)) {
+      return {
+        ok: false as const,
+        error:
+          "Shopify refused the cancellation. The Partner API client needs the View financials permission.",
+      };
+    }
+    return { ok: false as const, error: message };
+  }
 }
 
 export async function requirePaidPlan(request: Request) {

@@ -1,7 +1,6 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { redirect, Form, useLoaderData } from "react-router";
+import { redirect } from "react-router";
 
-import { login } from "../../shopify.server";
 import { PLAN_PRICES } from "../../lib/plans";
 
 import styles from "./styles.module.css";
@@ -9,40 +8,32 @@ import styles from "./styles.module.css";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
 
+  // Shop is present only when Shopify started install or opened the app.
   if (url.searchParams.get("shop")) {
-    throw redirect(`/app?${url.searchParams.toString()}`);
+    throw redirect(`/app/blocks?${url.searchParams.toString()}`);
   }
 
-  return { showForm: Boolean(login) };
+  return null;
 };
 
 export default function App() {
-  const { showForm } = useLoaderData<typeof loader>();
-
   return (
     <div className={styles.index}>
       <div className={styles.content}>
         <h1 className={styles.heading}>Shopify AI Editor</h1>
         <p className={styles.text}>
-          Create and edit Shopify theme code with ChatGPT and Claude, embedded
-          in the Shopify admin.
+          Create storefront sections with ChatGPT and Claude, then place them
+          with the AI Editor app block in the Shopify theme editor.
         </p>
-        {showForm && (
-          <Form className={styles.form} method="post" action="/auth/login">
-            <label className={styles.label}>
-              <span>Shop domain</span>
-              <input className={styles.input} type="text" name="shop" />
-              <span>e.g: my-shop-domain.myshopify.com</span>
-            </label>
-            <button className={styles.button} type="submit">
-              Log in
-            </button>
-          </Form>
-        )}
+        <p className={styles.text}>
+          Install AI Editor from the Shopify App Store, or open it from your
+          Shopify admin.
+        </p>
         <ul className={styles.list}>
           <li>
-            <strong>ChatGPT and Claude</strong>. Choose a model, then generate
-            or edit Liquid, JSON templates, JavaScript, CSS, or GraphQL.
+            <strong>ChatGPT and Claude</strong>. Describe a section. The app
+            builds a block you add from the theme editor. Theme files stay
+            unchanged.
           </li>
           <li>
             <strong>{`Your keys · $${PLAN_PRICES.byok} / month`}</strong>. Add a ChatGPT key, a

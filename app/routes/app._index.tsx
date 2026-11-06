@@ -756,6 +756,13 @@ function EditorScreen({
               </div>
 
               <div className={styles.codeArea}>
+                <GenerationStatus
+                  generating={generation.generating}
+                  status={generation.status}
+                  preview={generation.preview}
+                  elapsedLabel={generation.elapsedLabel}
+                  onCancel={generation.cancel}
+                />
                 {pendingIntent === "load-file" ? (
                   <div className={styles.overlay}>
                     <span className={styles.spinner} aria-hidden="true" />
@@ -920,36 +927,17 @@ function EditorScreen({
                   ))}
                 </div>
 
-                <GenerationStatus
-                  generating={generation.generating}
-                  status={generation.status}
-                  preview={generation.preview}
-                  elapsedLabel={generation.elapsedLabel}
-                />
-
                 <button
                   type="button"
                   className={styles.primaryButton}
-                  onClick={generation.generating ? generation.cancel : generate}
-                  disabled={
-                    (!generation.generating &&
-                      (busy || !availableModels.length || !prompt.trim()))
-                  }
+                  onClick={generate}
+                  disabled={busy || !availableModels.length || !prompt.trim()}
                 >
-                  {generation.generating ? (
-                    <>
-                      <span className={styles.spinner} aria-hidden="true" />
-                      Stop
-                    </>
-                  ) : code.trim() ? (
-                    "Edit code with AI"
-                  ) : (
-                    "Generate code"
-                  )}
+                  {code.trim() ? "Edit code with AI" : "Generate code"}
                 </button>
                 <span className={styles.hint}>
                   {generation.generating
-                    ? "Writing into the editor as the model responds. This can take several minutes."
+                    ? "Writing into the editor. Cancel is on the editor."
                     : "Ctrl + Enter to run"}
                 </span>
               </div>

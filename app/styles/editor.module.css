@@ -603,14 +603,72 @@
   text-align: center;
 }
 
-.liveBox {
+.generationOverlay {
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow: auto;
+  background: rgba(15, 20, 25, 0.82);
+}
+
+.generationCard {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border-radius: 8px;
-  background: #0f1419;
+  gap: 0.875rem;
+  width: min(42rem, 100%);
+  max-height: 100%;
+  padding: 1.25rem 1.25rem 1rem;
+  border: 1px solid #2a3340;
+  border-radius: 12px;
+  background: #161d25;
   color: #e6e1cf;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+}
+
+.generationCard:focus,
+.generationOverlay:focus {
+  outline: none;
+}
+
+.generationActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.generationNote {
+  margin: 0;
+  color: #8b96a3;
+  font-size: 0.75rem;
+}
+
+.generationCancel {
+  height: 2rem;
+  padding: 0 0.875rem;
+  border: 1px solid #5c6773;
+  border-radius: 8px;
+  background: transparent;
+  color: #e6e1cf;
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.generationCancel:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.generationCancel:focus-visible {
+  outline: 2px solid #5aa9ff;
+  outline-offset: 2px;
 }
 
 .liveStatus {
@@ -627,14 +685,15 @@
 }
 
 .liveText {
-  max-height: 9rem;
+  min-height: 0;
+  max-height: min(18rem, 40vh);
   margin: 0;
   overflow: auto;
   white-space: pre-wrap;
   word-break: break-word;
   font-family: var(--mono);
-  font-size: 0.75rem;
-  line-height: 1.45;
+  font-size: 0.8125rem;
+  line-height: 1.5;
 }
 
 .liveLabel {
@@ -796,6 +855,7 @@
 }
 
 .blockCode {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 15rem;

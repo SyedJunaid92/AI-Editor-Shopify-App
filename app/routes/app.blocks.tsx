@@ -495,6 +495,13 @@ function BlocksScreen({
               </div>
 
               <div className={styles.blockCode}>
+                <GenerationStatus
+                  generating={generation.generating}
+                  status={generation.status}
+                  preview={generation.preview}
+                  elapsedLabel={generation.elapsedLabel}
+                  onCancel={generation.cancel}
+                />
                 <div className={styles.tabBar}>
                   <div className={styles.codeTabs} role="tablist">
                     {(["html", "css"] as const).map((tab) => (
@@ -600,36 +607,17 @@ function BlocksScreen({
                   ))}
                 </div>
 
-                <GenerationStatus
-                  generating={generation.generating}
-                  status={generation.status}
-                  preview={generation.preview}
-                  elapsedLabel={generation.elapsedLabel}
-                />
-
                 <button
                   type="button"
                   className={styles.primaryButton}
-                  onClick={generation.generating ? generation.cancel : generate}
-                  disabled={
-                    !generation.generating &&
-                    (busy || !availableModels.length || !prompt.trim())
-                  }
+                  onClick={generate}
+                  disabled={busy || !availableModels.length || !prompt.trim()}
                 >
-                  {generation.generating ? (
-                    <>
-                      <span className={styles.spinner} aria-hidden="true" />
-                      Stop
-                    </>
-                  ) : draft.html.trim() ? (
-                    "Edit block with AI"
-                  ) : (
-                    "Generate block"
-                  )}
+                  {draft.html.trim() ? "Edit block with AI" : "Generate block"}
                 </button>
                 <span className={styles.hint}>
                   {generation.generating
-                    ? "The block updates as the model writes. This can take several minutes."
+                    ? "Writing into the editor. Cancel is on the editor."
                     : "Ctrl + Enter to run"}
                 </span>
               </div>

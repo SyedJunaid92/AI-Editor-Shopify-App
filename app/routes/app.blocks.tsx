@@ -192,10 +192,6 @@ function BlocksScreen({
   const fetcher = useFetcher<ActionData>();
   const revalidator = useRevalidator();
   const shopify = useAppBridge();
-  const location = useLocation();
-  const heading = location.pathname.replace(/\/$/, "").endsWith("/blocks")
-    ? "AI blocks"
-    : "AI Editor";
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(() => emptyDraft());
   const [keyEdited, setKeyEdited] = useState(false);
@@ -306,7 +302,7 @@ function BlocksScreen({
   };
 
   return (
-    <s-page heading={heading} inlineSize="large">
+    <s-page heading="AI blocks" inlineSize="large">
       <s-stack direction="block" gap="base">
         <s-banner heading="Use AI blocks in the theme customizer" tone="info">
           Create a block here and save it. Then click Add to theme, and enter

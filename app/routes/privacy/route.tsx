@@ -41,8 +41,8 @@ export default function PrivacyPolicy() {
         <p>
           Saved AI blocks are stored as metafields on the app installation in
           the merchant&apos;s Shopify shop. The theme app extension renders the
-          saved block. The app does not read or write theme files. Billing is
-          handled by Shopify.
+          saved block. The AI Editor reads and writes the theme files the
+          merchant opens. Billing is handled by Shopify.
         </p>
         <p>
           The app does not read customer accounts, orders, or other protected
@@ -54,6 +54,7 @@ export default function PrivacyPolicy() {
         <ul>
           <li>Install the app and keep the merchant signed in.</li>
           <li>Save the storefront blocks the merchant creates.</li>
+          <li>Read and update the theme files the merchant opens in AI Editor.</li>
           <li>Send a prompt to the model the merchant selects.</li>
           <li>Confirm an active app subscription through Shopify billing.</li>
         </ul>
